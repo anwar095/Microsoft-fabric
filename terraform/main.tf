@@ -62,3 +62,35 @@ resource "fabric_warehouse" "example2" {
     collation_type = "Latin1_General_100_BIN2_UTF8"
   }
 }
+resource "fabric_spark_workspace_settings" "spark_settings" {
+  for_each   = fabric_workspace.fabric_workspace
+  depends_on = [fabric_workspace.fabric_workspace]
+
+  workspace_id = each.value.id
+
+  high_concurrency = {
+    notebook_interactive_run_enabled = true
+    notebook_pipeline_run_enabled    = true
+  }
+}
+resource "fabric_spark_custom_pool" "spark_pool" {
+  for_each = fabric_workspace.fabric_workspace
+
+  workspace_id = each.value.id 
+  name         = var.spark_pool_name
+  node_family  = var.node_family
+  node_size    = var.node_size
+  type         = "Workspace"
+
+  auto_scale = {
+    enabled        = var.auto_scale_enabled
+    min_node_count = var.min_node_count
+    max_node_count = var.max_node_count
+  }
+
+  dynamic_executor_allocation = {
+    enabled       = var.dynamic_executor_allocation_enabled
+    min_executors = var.min_executors
+    max_executors = var.max_executors
+  }
+}
